@@ -15,13 +15,27 @@ namespace StandUp
         private const int TrackBarMinValue = 5;
         private int notifyMinutes = 45;
 
+        Timer tickTimer = new Timer();
+
         public FormSetting()
         {
             InitializeComponent();
         }
 
+        private void TickTimerProcessor(Object obj, EventArgs args)
+        {
+            tickTimer.Stop();
+
+            var frmTip = new FormTip();
+            frmTip.Show();
+        }
+
         private void FormSetting_Load(object sender, EventArgs e)
         {
+            tickTimer.Tick += new EventHandler(TickTimerProcessor);
+
+            tickTimer.Interval = 5 * 1000;
+            tickTimer.Start();
         }
 
         private void FormSetting_SizeChanged(object sender, EventArgs e)
