@@ -13,7 +13,8 @@ namespace StandUp
     public partial class FormSetting : Form
     {
         private const int TrackBarMinValue = 5;
-        private int notifyMinutes = 45;
+
+        public int notifyMinutes = 45;
 
         Timer tickTimer = new Timer();
 
@@ -26,7 +27,8 @@ namespace StandUp
         {
             tickTimer.Stop();
 
-            var frmTip = new FormTip();
+            var frmTip = new FormTip(this);
+            // frmTip.TopMost = true;
             frmTip.Show();
         }
 
@@ -34,8 +36,10 @@ namespace StandUp
         {
             tickTimer.Tick += new EventHandler(TickTimerProcessor);
 
-            tickTimer.Interval = 5 * 1000;
+            tickTimer.Interval = notifyMinutes * 60 * 1000;
             tickTimer.Start();
+
+            trackBar1.Value = (int)Math.Floor(notifyMinutes * 1.0 / TrackBarMinValue);
         }
 
         private void FormSetting_SizeChanged(object sender, EventArgs e)
@@ -61,8 +65,16 @@ namespace StandUp
 
         private void trackBar1_ValueChanged(object sender, EventArgs e)
         {
-            //Console.Write("val: " + trackBar1.Value);
-            notifyMinutes = trackBar1.Value * TrackBarMinValue;
+            notifyMinutes = Math.Max(1, trackBar1.Value * TrackBarMinValue);
+
+            tickTimer.Stop();
+            tickTimer.Interval = notifyMinutes * 60 * 1000;
+            tickTimer.Enabled = true;
+        }
+
+        public void Resume()
+        {
+            tickTimer.Enabled = true;
         }
     }
 }

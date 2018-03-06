@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Diagnostics;
 
 namespace StandUp
 {
@@ -14,6 +15,11 @@ namespace StandUp
         [STAThread]
         static void Main()
         {
+            // avoid same app run
+            String thisprocessname = Process.GetCurrentProcess().ProcessName;
+            if (Process.GetProcesses().Count(p => p.ProcessName == thisprocessname) > 1)
+                return;
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             //Application.Run(new FormTip());
