@@ -7,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 namespace StandUp
 {
@@ -15,6 +17,7 @@ namespace StandUp
         private const int TrackBarMinValue = 5;
 
         public int notifyMinutes = 45;
+        public bool isDisableWhenFullscreen = false;
 
         Timer tickTimer = new Timer();
 
@@ -25,6 +28,12 @@ namespace StandUp
 
         private void TickTimerProcessor(Object obj, EventArgs args)
         {
+            if (isDisableWhenFullscreen && IsForegroundFullScreen())
+			{
+                Debug.WriteLine("exist fullscreen program");
+                return;
+			}
+
             tickTimer.Stop();
 
             var frmTip = new FormTip(this);
@@ -32,11 +41,16 @@ namespace StandUp
             frmTip.Show();
         }
 
+        private int Minutes2Interval(int minutes)
+		{
+            return minutes * 1000; // * 60 * 1000;
+        }
+
         private void FormSetting_Load(object sender, EventArgs e)
         {
             tickTimer.Tick += new EventHandler(TickTimerProcessor);
 
-            tickTimer.Interval = notifyMinutes * 60 * 1000;
+            tickTimer.Interval = Minutes2Interval(notifyMinutes);
             tickTimer.Start();
 
             trackBar1.Value = (int)Math.Floor(notifyMinutes * 1.0 / TrackBarMinValue);
@@ -68,13 +82,50 @@ namespace StandUp
             notifyMinutes = Math.Max(1, trackBar1.Value * TrackBarMinValue);
 
             tickTimer.Stop();
-            tickTimer.Interval = notifyMinutes * 60 * 1000;
+            tickTimer.Interval = Minutes2Interval(notifyMinutes);
             tickTimer.Enabled = true;
         }
 
         public void Resume()
         {
             tickTimer.Enabled = true;
+        }
+
+		private void disableFullscreenCheckBox_CheckedChanged(object sender, EventArgs e)
+		{
+            isDisableWhenFullscreen = !isDisableWhenFullscreen;
+        }
+
+        // https://stackoverflow.com/questions/3743956/is-there-a-way-to-check-to-see-if-another-program-is-running-full-screen
+        [StructLayout(LayoutKind.Sequential)]
+        private struct RECT
+        {
+            public int left;
+            public int top;
+            public int right;
+            public int bottom;
+        }
+
+        [DllImport("user32.dll")]
+        private static extern bool GetWindowRect(HandleRef hWnd, [In, Out] ref RECT rect);
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetForegroundWindow();
+
+        public static bool IsForegroundFullScreen()
+        {
+            return IsForegroundFullScreen(null);
+        }
+
+        public static bool IsForegroundFullScreen(Screen screen)
+        {
+            if (screen == null)
+            {
+                screen = Screen.PrimaryScreen;
+            }
+            RECT rect = new RECT();
+            GetWindowRect(new HandleRef(null, GetForegroundWindow()), ref rect);
+            return new Rectangle(rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top).Contains(screen.Bounds);
         }
     }
 }
