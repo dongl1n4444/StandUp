@@ -43,7 +43,7 @@ namespace StandUp
 
         private int Minutes2Interval(int minutes)
 		{
-            return minutes * 1000; // * 60 * 1000;
+            return minutes * 60 * 1000;
         }
 
         private void FormSetting_Load(object sender, EventArgs e)
